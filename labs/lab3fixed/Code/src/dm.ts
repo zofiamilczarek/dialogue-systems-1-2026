@@ -66,6 +66,14 @@ function getPerson(utterance: string) {
   return (grammar[utterance.toLowerCase()] || {}).person;
 }
 
+function isConfirmation(utterance: string) {
+  return (grammar[utterance.toLowerCase()] || {}).confirmation == "yes";
+}
+
+function isRejection(utterance: string) {
+  return (grammar[utterance.toLowerCase()] || {}).confirmation == "no";
+}
+
 const dmMachine = setup({
   types: {
     context: {} as DMContext,
@@ -88,6 +96,7 @@ const dmMachine = setup({
   context: ({ spawn }) => ({
     spstRef: spawn(speechstate, { input: settings }),
     lastResult: null,
+    appt: {},
   }),
   id: "DM",
   initial: "Prepare",
@@ -104,7 +113,7 @@ const dmMachine = setup({
       on: {
         LISTEN_COMPLETE: [
           {
-            target: "CheckGrammar",
+            target: "StartPrompt",
             guard: ({ context }) => !!context.lastResult,
           },
           { target: ".NoInput" },
@@ -128,6 +137,52 @@ const dmMachine = setup({
             RECOGNISED: {
               actions: assign(({ event }) => {
                 return { lastResult: event.value };
+              }),
+            },
+            ASR_NOINPUT: {
+              actions: assign({ lastResult: null }),
+            },
+          },
+        },
+      },
+    },
+    StartPrompt: {entry: {type: "spst.speak", params: {utterance: "Let's creae an appointment"}}},
+    WhoPrompt: {
+      initial: "Prompt",
+      on: {
+        LISTEN_COMPLETE: [
+          {
+            target: "StartPrompt",
+            guard: ({ context }) => !!context.lastResult,
+          },
+          { target: ".NoInput" },
+        ],
+      },
+      states: {
+        Prompt: {
+          entry: { type: "spst.speak", params: { utterance: `Who are you meeting with?` } },
+          on: { SPEAK_COMPLETE: "Ask" },
+        },
+        NoInput: {
+          entry: {
+            type: "spst.speak",
+            params: { utterance: `I can't hear you!` },
+          },
+          on: { SPEAK_COMPLETE: "Ask" },
+        },
+        Ask: {
+          entry: { type: "spst.listen" },
+          on: {
+            RECOGNISED: {
+              actions: assign(({ context, event }) => {
+                const text = event.value?.[0]?.utterance ?? "";
+                return { 
+                  lastResult: event.value,
+                  appt: {
+                    ...context.appt,
+                    name: text,
+                  },
+                };
               }),
             },
             ASR_NOINPUT: {
