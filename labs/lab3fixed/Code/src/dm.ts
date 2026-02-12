@@ -26,6 +26,7 @@ interface GrammarEntry {
   person?: string;
   day?: string;
   time?: string;
+  confirmation?: string;
 }
 
 const grammar: { [index: string]: GrammarEntry } = {
@@ -35,9 +36,27 @@ const grammar: { [index: string]: GrammarEntry } = {
   tom: { person: "Tom Södahl Bladsjö" },
   monday: { day: "Monday" },
   tuesday: { day: "Tuesday" },
-  "10": { time: "10:00" },
-  "11": { time: "11:00" },
+  wednesday: { day: "Wednesday" },
+  thursday: { day: "Thursday" },
+  friday: { day: "Friday" },
+  saturday: { day: "Saturday" },
+  sunday: { day: "Sunday" },
+  "yes": {confirmation: "yes"},
+  "yeah": {confirmation: "yes"},
+  "sure": {confirmation: "yes"},
+  "why not": {confirmation: "yes"},
+  "yup": {confirmation: "yes"},
+  "ok": {confirmation: "yes"},
+  "nope": {confirmation: "no"},
+  "nah": {confirmation: "no"},
+  "not sure": {confirmation: "no"},
+  "no": {confirmation: "no"},
 };
+
+for (let h = 0; h <= 12; h++) {
+  const key = String(h)
+  grammar[key] = { time: `${key.padStart(2, "0")}:00` };
+}
 
 function isInGrammar(utterance: string) {
   return utterance.toLowerCase() in grammar;
@@ -93,7 +112,7 @@ const dmMachine = setup({
       },
       states: {
         Prompt: {
-          entry: { type: "spst.speak", params: { utterance: `Hello world!` } },
+          entry: { type: "spst.speak", params: { utterance: `Hi!` } },
           on: { SPEAK_COMPLETE: "Ask" },
         },
         NoInput: {
