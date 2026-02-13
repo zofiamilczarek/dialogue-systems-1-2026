@@ -93,7 +93,7 @@ In your submission provide:
 
 These files can be placed in your Github repository.
 
-- **Work on the new folder created for this lab:** lab4. You have to click Sync Fork on your github account and type "git pull" in your local so that your local is in sync with the fork you just synched.
+- **Work on the new folder created for this lab:** lab4. You have to click Sync Fork on your github account and type command "git pull" in your local so that your local is in sync with the fork you just synched.
 - **Commit** your changes into this branch and **push** them to your repository (your fork of this repository)
 - **Create a pull request**, the same way you did it for Lab 3. Change the title to "Lab 4 submission" (if you want to ask a question about your code, use the title "Lab 4 work in progress").
 - On Canvas, submit the pull request URL.
