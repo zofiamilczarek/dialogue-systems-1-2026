@@ -74,64 +74,6 @@ function isRejection(utterance: string) {
   return (grammar[utterance.toLowerCase()] || {}).confirmation == "no";
 }
 
-const slotFlow = setup({
-  types: {
-    input: {} as SlotInput,
-    output: {} as Hypothesis[] | null,
-  },
-}).createMachine({
-  id: "slotFlow",
-
-  context: ({ input }) => ({
-    prompt: input.prompt,
-    heard: null as Hypothesis[] | null,
-  }),
-
-  initial: "Prompt",
-
-  states: {
-    Prompt: {
-      entry: ({ context, self }) =>
-        self._parent!.send({
-          type: "SPEAK",
-          value: { utterance: context.prompt },
-        }),
-      on: { SPEAK_COMPLETE: "Ask" },
-    },
-
-    Ask: {
-      entry: ({ self }) =>
-        self._parent!.send({ type: "LISTEN" }),
-
-      on: {
-        RECOGNISED: {
-          target: "Done",
-          actions: assign({
-            heard: ({ event }) => event.value
-          }),
-        },
-
-        ASR_NOINPUT: "NoInput",
-      },
-    },
-
-    NoInput: {
-      entry: ({ self }) =>
-        self._parent!.send({
-          type: "SPEAK",
-          value: { utterance: "I can't hear you." },
-        }),
-      on: { SPEAK_COMPLETE: "Ask" },
-    },
-
-    Done: {
-      type: "final",
-      output: ({ context }) => context.heard,
-    },
-  },
-});
-
-
 const dmMachine = setup({
   types: {
     context: {} as DMContext,
@@ -149,9 +91,6 @@ const dmMachine = setup({
       context.spstRef.send({
         type: "LISTEN",
       }),
-  },
-  actors: {
-    slotFlow,
   },
 }).createMachine({
   context: ({ spawn }) => ({
