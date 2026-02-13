@@ -15,6 +15,6 @@
   "dependencies": {
     "@statelyai/inspect": "^0.4.0",
     "speechstate": "^2.15.0",
-    "xstate": "^5.26.0"
+    "xstate": "^5.28.0"
   }
 }
