@@ -1,5 +1,5 @@
 import { assign, createActor, setup } from "xstate";
-import type { Hypothesis, Settings } from "speechstate";
+import type { Settings } from "speechstate";
 import { speechstate } from "speechstate";
 import { createBrowserInspector } from "@statelyai/inspect";
 import { KEY } from "./azure";
@@ -74,7 +74,6 @@ function isRejection(utterance: string) {
   return (grammar[utterance.toLowerCase()] || {}).confirmation == "no";
 }
 
-
 const dmMachine = setup({
   types: {
     context: {} as DMContext,
@@ -107,103 +106,201 @@ const dmMachine = setup({
       on: { ASRTTS_READY: "WaitToStart" },
     },
     WaitToStart: {
-      on: { CLICK: "Dialogue.Greeting" },
+      on: { CLICK: "Greeting" },
     },
-    Ask: {
-      entry: { type: "spst.listen" },
+    Greeting: {
+      initial: "Prompt",
       on: {
-        RECOGNISED: {
-          actions: assign(({ event }) => ({
-            lastResult: event.value,
-          })),
-          target: "Dialogue.hist",
-        }, 
-        ASR_NOINPUT: {
-          actions: assign({ lastResult: null }),
-          // target: "Dialogue.NoInput",
-        },
+        LISTEN_COMPLETE: [
+          {
+            target: "StartPrompt",
+            guard: ({ context }) => !!context.lastResult,
+          },
+          { target: ".NoInput" },
+        ],
       },
-    },
-    NoInput: {
-      entry: {
-        type: "spst.speak",
-        params: { utterance: `I can't hear you!` },
-      },
-      on: { SPEAK_COMPLETE: "Ask" },
-    },
-    Dialogue: {
-      id: "Dialogue",
-      initial: "Greeting",
       states: {
-        hist: {
-          type: "history",
-          history: "deep",
+        Prompt: {
+          entry: { type: "spst.speak", params: { utterance: `Hi!` } },
+          on: { SPEAK_COMPLETE: "Ask" },
         },
-        Greeting: {
-          initial: "Prompt",
+        NoInput: {
+          entry: {
+            type: "spst.speak",
+            params: { utterance: `I can't hear you!` },
+          },
+          on: { SPEAK_COMPLETE: "Ask" },
+        },
+        Ask: {
+          entry: { type: "spst.listen" },
           on: {
-            LISTEN_COMPLETE: [
-              {
-                target: "StartPrompt",
-                guard: ({ context }) => !!context.lastResult,
-              },
-              { target: "#DM.NoInput" },
-            ],
-          },
-          states: {
-            Prompt: {
-              entry: { type: "spst.speak", params: { utterance: `Hi!` } },
-              on: { SPEAK_COMPLETE: "#DM.Ask" },
+            RECOGNISED: {
+              actions: assign(({ event }) => {
+                return { lastResult: event.value };
+              }),
             },
-          },
-        },
-        StartPrompt: {
-          entry: {type: "spst.speak", params: {utterance: "Let's create an appointment"}},
-          on: {SPEAK_COMPLETE: "WhoPrompt"},
-        },
-        WhoPrompt: {
-          initial: "Prompt",
-          on: {
-            LISTEN_COMPLETE: [
-              {
-                target: "#DM.Done",
-                guard: ({ context }) => !!context.lastResult,
-              },
-              { target: "#DM.NoInput" },
-            ],
-          },
-          states: {
-            Prompt: {
-              entry: { type: "spst.speak", params: { utterance: `Who are you meeting with?` } },
-              on: { SPEAK_COMPLETE: "Ask" },
-            },
-            NoInput: {
-              entry: {
-                type: "spst.speak",
-                params: { utterance: `I can't hear you!` },
-              },
-              on: { SPEAK_COMPLETE: "Ask" },
-            },
-            Ask: {
-              entry: { type: "spst.listen" },
-              on: {
-                RECOGNISED: {
-                  actions: assign(({ event }) => {
-                    return { lastResult: event.value };
-                  }),
-                },
-                ASR_NOINPUT: {
-                  actions: assign({ lastResult: null }),
-                },
-              },
+            ASR_NOINPUT: {
+              actions: assign({ lastResult: null }),
             },
           },
         },
       },
     },
+    StartPrompt: {
+        entry: {type: "spst.speak", params: {utterance: "Let's create an appointment"}},
+        on: {SPEAK_COMPLETE: "WhoPrompt"},
+      },
+    WhoPrompt: {
+      initial: "Prompt",
+      on: {
+        LISTEN_COMPLETE: [
+          // 1st we try to go to day prompt if the name is correct
+          {
+            target: "DayPrompt",
+            guard: ({ context }) => !!getPerson(`${(context.appt || {}).name}`),
+          },
+          // then, if name is not correct, we go to DayPrompt anways
+          {
+            target: "DayPrompt",
+            guard: ({ context }) => !!context.lastResult,
+          },
+          { target: ".NoInput" },
+        ],
+      },
+      states: {
+        Prompt: {
+          entry: { type: "spst.speak", params: { utterance: `Who are you meeting with?` } },
+          on: { SPEAK_COMPLETE: "Ask" },
+        },
+        NoInput: {
+          entry: {
+            type: "spst.speak",
+            params: { utterance: `I can't hear you!` },
+          },
+          on: { SPEAK_COMPLETE: "Ask" },
+        },
+        Ask: {
+          entry: { type: "spst.listen" },
+          on: {
+            RECOGNISED: {
+              actions: assign(({ context, event }) => ({
+                lastResult: event.value,
+                appt: {
+                  ...context.appt,
+                  name: event.value?.[0]?.utterance ?? "",
+                },
+              })),
+            },
+            ASR_NOINPUT: {
+              actions: assign({ lastResult: null }),
+            },
+          },
+        },
+      },
+    },
+    DayPrompt: {
+      initial: "Prompt",
+      on: {
+        LISTEN_COMPLETE: [
+          {
+            target: "ConfirmDayName",
+            guard: ({ context }) => !!context.lastResult,
+          },
+          { target: ".NoInput" },
+        ],
+      },
+      states: {
+        Prompt: {
+          entry: { type: "spst.speak", params: { utterance: `On which day is your meeting` } },
+          on: { SPEAK_COMPLETE: "Ask" },
+        },
+        NoInput: {
+          entry: {
+            type: "spst.speak",
+            params: { utterance: `I can't hear you!` },
+          },
+          on: { SPEAK_COMPLETE: "Ask" },
+        },
+        Ask: {
+          entry: { type: "spst.listen" },
+          on: {
+            RECOGNISED: {
+              actions: assign(({ context, event }) => ({
+                lastResult: event.value,
+                appt: {
+                  ...context.appt,
+                  day: event.value?.[0]?.utterance ?? "",
+                },
+              })),
+            },
+            ASR_NOINPUT: {
+              actions: assign({ lastResult: null }),
+            },
+          },
+        },
+      },
+    },
+    IsWholeDay: {
+      initial: "Prompt",
+      on: {
+        LISTEN_COMPLETE: [
+          // 1st we try to go to day prompt if the name is correct
+          {
+            target: "ConfirmDayName",
+            guard: ({ context }) => isConfirmation((context.lastResult | Hypothesis[]).utterance),
+          },
+          // then, if name is not correct, we go to DayPrompt anways
+          {
+            target: "TimePrompt",
+            guard: ({ context }) => !!context.lastResult,
+          },
+          { target: ".NoInput" },
+        ],
+      },
+      states: {
+        Prompt: {
+          entry: { type: "spst.speak", params: { utterance: `Who are you meeting with?` } },
+          on: { SPEAK_COMPLETE: "Ask" },
+        },
+        NoInput: {
+          entry: {
+            type: "spst.speak",
+            params: { utterance: `I can't hear you!` },
+          },
+          on: { SPEAK_COMPLETE: "Ask" },
+        },
+        Ask: {
+          entry: { type: "spst.listen" },
+          on: {
+            RECOGNISED: {
+              actions: assign(({ context, event }) => ({
+                lastResult: event.value,
+                appt: {
+                  ...context.appt,
+                  name: event.value?.[0]?.utterance ?? "",
+                },
+              })),
+            },
+            ASR_NOINPUT: {
+              actions: assign({ lastResult: null }),
+            },
+          },
+        },
+      },
+    },
+    ConfirmDayName: {
+      entry: {
+        type: "spst.speak", 
+        params: ({context}) => ({
+          utterance: `Do you want me to create am appointment with ${context.appt.name} on ${context.appt.day} the whole day?`
+        })
+      },
+      on: {SPEAK_COMPLETE: "Done"},
+    },
+
     Done: {
       on: {
-        CLICK: "Dialogue.Greeting",
+        CLICK: "Greeting",
       },
     },
   },
