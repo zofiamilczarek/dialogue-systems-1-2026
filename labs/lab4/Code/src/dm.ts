@@ -9,13 +9,13 @@ const inspector = createBrowserInspector();
 
 const azureCredentials = {
   endpoint:
-    "https://YOUR_REGION.api.cognitive.microsoft.com/sts/v1.0/issuetoken",
+    "https://francecentral.api.cognitive.microsoft.com/sts/v1.0/issuetoken",
   key: KEY,
 };
 
 const settings: Settings = {
   azureCredentials: azureCredentials,
-  azureRegion: "YOUR_REGION",
+  azureRegion: "francecentral",
   asrDefaultCompleteTimeout: 0,
   asrDefaultNoInputTimeout: 5000,
   locale: "en-US",
@@ -26,6 +26,7 @@ interface GrammarEntry {
   person?: string;
   day?: string;
   time?: string;
+  confirmation?: string;
 }
 
 const grammar: { [index: string]: GrammarEntry } = {
@@ -35,17 +36,48 @@ const grammar: { [index: string]: GrammarEntry } = {
   tom: { person: "Tom Södahl Bladsjö" },
   monday: { day: "Monday" },
   tuesday: { day: "Tuesday" },
-  "10": { time: "10:00" },
-  "11": { time: "11:00" },
+  wednesday: { day: "Wednesday" },
+  thursday: { day: "Thursday" },
+  friday: { day: "Friday" },
+  saturday: { day: "Saturday" },
+  sunday: { day: "Sunday" },
+  "yes": {confirmation: "yes"},
+  "yeah": {confirmation: "yes"},
+  "sure": {confirmation: "yes"},
+  "why not": {confirmation: "yes"},
+  "yup": {confirmation: "yes"},
+  "ok": {confirmation: "yes"},
+  "nope": {confirmation: "no"},
+  "nah": {confirmation: "no"},
+  "not sure": {confirmation: "no"},
+  "no": {confirmation: "no"},
 };
 
-function isInGrammar(utterance: string) {
-  return utterance.toLowerCase() in grammar;
+// adding timestamps
+for (let h = 0; h <= 12; h++) {
+  const key = String(h)
+  grammar[key] = { time: `${key.padStart(2, "0")}:00` };
 }
 
-function getPerson(utterance: string) {
-  return (grammar[utterance.toLowerCase()] || {}).person;
+
+console.log(grammar);
+
+function getName(utterance: string) {
+  utterance = utterance.match(/((?<=(meeting |meet |with ))[A-Z][a-zA-z]+|^[A-Z][a-zA-z]+$)/)?.[0] ?? ""
+  return (grammar[utterance.toLowerCase()] || {}).person ?? undefined;
 }
+
+function getDay(utterance: string) {
+  utterance = utterance.match(/Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/)?.[0] ?? ""
+  console.log(`day: ${utterance}`)
+  return (grammar[utterance.toLowerCase()] || {}).day ?? undefined;
+}
+
+function getTime(utterance: string) {
+  utterance = utterance.match(/[0-9]{1,2}/)?.[0] ?? ""
+  return (grammar[utterance.toLowerCase()] || {}).time ?? undefined;
+}
+
 
 const dmMachine = setup({
   types: {
@@ -64,11 +96,24 @@ const dmMachine = setup({
       context.spstRef.send({
         type: "LISTEN",
       }),
+    "resetVars" : assign(() => ({
+            lastResult: null,
+            appt: {
+              name: undefined,
+              day: undefined,
+              time: undefined,
+            },
+      })),
   },
+  guards:{
+    isYes: ({context}) => (grammar[context.lastResult ? context.lastResult?.[0]?.utterance.toLowerCase() : ""] || {}).confirmation == "yes",
+    isNo: ({context}) => (grammar[context.lastResult ? context.lastResult?.[0]?.utterance.toLowerCase() : ""] || {}).confirmation == "no",
+  }
 }).createMachine({
   context: ({ spawn }) => ({
     spstRef: spawn(speechstate, { input: settings }),
     lastResult: null,
+    appt: {},
   }),
   id: "DM",
   initial: "Prepare",
@@ -78,63 +123,111 @@ const dmMachine = setup({
       on: { ASRTTS_READY: "WaitToStart" },
     },
     WaitToStart: {
-      on: { CLICK: "Greeting" },
+      on: { CLICK: "Dialogue.Greeting" },
     },
-    Greeting: {
-      initial: "Prompt",
-      on: {
-        LISTEN_COMPLETE: [
-          {
-            target: "CheckGrammar",
-            guard: ({ context }) => !!context.lastResult,
-          },
-          { target: ".NoInput" },
-        ],
-      },
-      states: {
-        Prompt: {
-          entry: { type: "spst.speak", params: { utterance: `Hello world!` } },
-          on: { SPEAK_COMPLETE: "Ask" },
-        },
-        NoInput: {
-          entry: {
-            type: "spst.speak",
-            params: { utterance: `I can't hear you!` },
-          },
-          on: { SPEAK_COMPLETE: "Ask" },
-        },
-        Ask: {
-          entry: { type: "spst.listen" },
-          on: {
-            RECOGNISED: {
-              actions: assign(({ event }) => {
-                return { lastResult: event.value };
-              }),
-            },
-            ASR_NOINPUT: {
-              actions: assign({ lastResult: null }),
-            },
-          },
-        },
-      },
-    },
-    CheckGrammar: {
+    NoInput: {
       entry: {
         type: "spst.speak",
-        params: ({ context }) => ({
-          utterance: `You just said: ${context.lastResult![0].utterance}. And it ${
-            isInGrammar(context.lastResult![0].utterance) ? "is" : "is not"
-          } in the grammar.`,
-        }),
+        params: { utterance: `I can't hear you!` },
       },
-      on: { SPEAK_COMPLETE: "Done" },
+      on: { SPEAK_COMPLETE: "Dialogue.hist" },
     },
-    Done: {
-      on: {
-        CLICK: "Greeting",
-      },
+    Dialogue:{
+      id: "Dialogue",
+      initial: "Greeting",
+      states: {
+        hist: {
+          type: "history",
+          history: "deep",
+        },
+        Greeting: {
+          initial: "Prompt",
+          on: {
+            LISTEN_COMPLETE: [
+              {
+                target: "TestASR",
+                guard: ({ context }) => !!context.lastResult,
+              },
+              { target: "#DM.NoInput" },
+            ],
+          },
+          states: {
+            Prompt: {
+              entry: { type: "spst.speak", params: { utterance: `Hi!` } },
+              on: { SPEAK_COMPLETE: "Ask" },
+            },
+            Ask: {
+              entry: { type: "spst.listen" },
+              on: {
+                RECOGNISED: {
+                  actions: assign(({ event }) => {
+                    return { lastResult: event.value };
+                  })
+                },
+                ASR_NOINPUT: {
+                  actions: assign({ lastResult: null }),
+                  invoke: "#DM.NoInput"
+                },
+              },
+            },
+          },
+        },
+        TestASR: {
+          initial: "Prompt",
+          on: {
+            LISTEN_COMPLETE: [
+              {
+                target: "#DM.Done",
+                guard: "isNo",
+              },
+              {
+                target: "SayConfidence",
+                guard: ({ context }) => !!context.lastResult,
+              },
+              { target: "#DM.NoInput" },
+            ],
+          },
+          states: {
+            Prompt: {
+              entry: { 
+                type: "spst.speak", 
+                params: { utterance: `Let's test the ASR! Say a phrase and I will transcribe it and show you the confidence. Say no if you want to stop this test.` } 
+              },
+              on: { SPEAK_COMPLETE: "Ask" },
+            },
+            Ask: {
+              entry: { type: "spst.listen" },
+              on: {
+                RECOGNISED:{
+                    actions: [assign(({ event }) => {
+                      console.log(event.value);
+                      return { lastResult: event.value };
+                    }),
+                  ],
+                  },
+                ASR_NOINPUT: {
+                  actions: assign({ lastResult: null }),
+                  invoke: "#DM.NoInput"
+                },
+              },
+            },
+          },
+        },
+        SayConfidence : {
+              entry: { type: "spst.speak", params: ({context}) => ({
+              utterance: `I transcribed ${context.lastResult?.[0]?.utterance.toLowerCase() ?? "NOTHING"} with a confidence of ${context.lastResult?.[0]?.confidence.toFixed(2) ?? "N/A"}`
+            })},
+              on: { SPEAK_COMPLETE: "TestASR" },
+        },
+    },
+  }, 
+  Done: {
+    entry: [{type: "spst.speak", params: {utterance: "Thank you for testing the ASR with us. Goodbye!"}}],
+    on: {
+      CLICK: "Dialogue.Greeting",
     },
   },
+}
 });
 
 const dmActor = createActor(dmMachine, {
