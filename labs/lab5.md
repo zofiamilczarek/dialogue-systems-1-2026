@@ -64,7 +64,7 @@ Now NLUObject (which contains our Intent and Entity types) are inside our DMCont
 
 ## Task 1: Integrate a statistical NLU in your dialogue system
 In Lab 2 (basic dialogue management), you used a simplistic mapping
-(called =grammar= in the code) from user utterances to entities. In the
+(called *grammar* in the code) from user utterances to entities. In the
 first task of this lab, you will replace this grammar with a
 statistical NLU trained and deployed using Conversational Language
 Understanding (CLU) in Azure.
@@ -76,9 +76,9 @@ Understanding (CLU) in Azure.
   need to create a new Azure language resource.  Note that resource
   names are unique across the entire Azure platform, so you may need
   to include some arbitrary digits or numbers in it
-  (e.g. =language_resource_57372=).
+  (e.g. *language_resource_57372*).
 
-  As project name, you can e.g. enter: =appointment=.
+  As project name, you can e.g. enter: *appointment*.
 
 ### 2) Add intents 
   In the "Schema definition" menu of your project you will find the
@@ -96,7 +96,7 @@ Understanding (CLU) in Azure.
   - Example utterance: "Find me a good Italian place nearby."
 
 First, create two intents, corresponding to "create a meeting" and
-"who is X" (X= name of a famous person). Make sure to use the same
+"who is X" (X = name of a famous person). Make sure to use the same
 names for these intents as you do in your code.  Then, choose "Data
 labeling" in the navigation menu to the left and add around 10
 training examples for each intent. (At this stage, you can come up
@@ -104,14 +104,14 @@ with examples on your own. You can improve the training data later.)
 
 To train the model for the first time, choose "Training jobs" in the
 navigation menu and select "Train a new model". As model name, you can
-choose =appointment=. (When you re-train the model later on, select
+choose *appointment*. (When you re-train the model later on, select
 "Overwrite an existing model".)
 
 ### 3) Deploy the model
   In order to use your trained model in your dialogue system, you
   first need to deploy it. Choose "Deploying a model" in the
   navigation menu and then "Add deployment". Again, as deployment name
-  you can choose =appointment=. (When you re-train your model later on
+  you can choose *appointment*. (When you re-train your model later on
   and want to re-deploy it, overwrite the existing deployment name.) 
   After deploying, you can see the URL of your deployment by selecting 
   the model and clicking on "Get prediction URL". You will need it in 
@@ -123,10 +123,10 @@ choose =appointment=. (When you re-train the model later on, select
 1. As we have said, you can copy stuff from Lab 3.
 
 2. Configure your NLU by adding the following to your files:
-   - create a ~NLU_KEY~ const in your =azure.ts= file and import it
-     (together with your ~KEY~).
-   - In =dm.ts=, create the object "azureLanguageCredentials":
-     #+begin_src javascript
+   - create a **NLU_KEY** const in your *azure.ts* file and import it
+     (together with your **KEY**).
+   - In *dm.ts*, create the object "azureLanguageCredentials":
+     ```typescript
 
        const azureLanguageCredentials = {
          endpoint: "" /** your Azure CLU prediction URL */,
@@ -134,8 +134,9 @@ choose =appointment=. (When you re-train the model later on, select
          deploymentName: "" /** your Azure CLU deployment */,
          projectName: "" /** your Azure CLU project name */,
        };
+    ```
 
-    #+end_src
+  ```typescript
    - To your =settings= const add said object:
      #+begin_src javascript
        const settings = {
@@ -146,20 +147,20 @@ choose =appointment=. (When you re-train the model later on, select
          locale: "en-US",
          ttsDefaultVoice: "en-US-DavisNeural",
        };
-    #+end_src
+  ```
 
 4. Whenever you need to use Azure CLU, add the following parameter to
-   =LISTEN= event.
-   #+begin_src javascript
+   *LISTEN* event.
+   ```typescript
      ({ context }) =>
             context.ssRef.send({
               type: "LISTEN",
               value: { nlu: true } /** Local activation of NLU */,
             }),
-   #+end_src
+   ```
 
-   This enables =RECOGNISED= events to contain NLU results (accessible
-   via =event.nluValue=).
+   This enables *RECOGNISED* events to contain NLU results (accessible
+   via *event.nluValue*).
 
 Finally, you need to rewire the logic in your code to support 2 aforementioned intents. 
 
