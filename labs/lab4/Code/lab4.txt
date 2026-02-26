@@ -1,0 +1,10 @@
+<!--ID=B7267351-473F-409D-9765-754A8EBCDE05;Version=1|{"VoiceNameToIdMapItems":[{"Id":"c672661c-de72-4578-89cc-5d52ad876893","Name":"Microsoft Server Speech Text to Speech Voice (en-GB, AdaMultilingualNeural)","ShortName":"en-GB-AdaMultilingualNeural","Locale":"en-GB","VoiceType":"StandardVoice"},{"Id":"1ef900c5-21da-47d1-b5fa-781d43fac5de","Name":"en-GB-Ada:DragonHDLatestNeural","ShortName":"en-GB-Ada:DragonHDLatestNeural","Locale":"en-GB","VoiceType":"StandardVoice"}]}-->
+<!--ID=FCB40C2B-1F9F-4C26-B1A1-CF8E67BE07D1;Version=1|{"Files":{}}-->
+<!--ID=5B95B1CC-2C7B-494F-B746-CF22A0E779B7;Version=1|{"Locales":{"en-GB":{"AutoApplyCustomLexiconFiles":[{}]}}}-->
+<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="en-GB"><voice name="en-GB-AdaMultilingualNeural"></voice>
+<voice name="en-GB-Ada:DragonHDLatestNeural"></voice>
+<voice name="en-GB-AdaMultilingualNeural"><prosody rate="-20.00%" pitch="-10.00%">Warning </prosody><break strength="strong" />
+<prosody contour="(15%, +39%) (34%, +81%) (42%, +40%) (50%, -11%) (63%, -39%)">When I am an old woman</prosody><break strength="medium" />  I shall wear purple <break strength="weak" />
+ <prosody rate="+20.00%" contour="(33%, +71%) (55%, -50%)">With a red hat</prosody><break strength="weak" />  which doesn’t go, and doesn’t suit me.
+And I shall spend my pension on brandy and summer gloves <prosody rate="+20.00%">And satin sandals, and say </prosody><break strength="weak" />  <emphasis level="moderate"><prosody contour="(29%, +65%) (64%, -29%) (80%, +73%) (95%, -94%)"> we’ve no money for butter. </prosody></emphasis>
+</voice></speak>
