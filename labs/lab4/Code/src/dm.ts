@@ -145,7 +145,7 @@ const dmMachine = setup({
           on: {
             LISTEN_COMPLETE: [
               {
-                target: "TestASR",
+                target: "StartPrompt",
                 guard: ({ context }) => !!context.lastResult,
               },
               { target: "#DM.NoInput" },
@@ -172,6 +172,10 @@ const dmMachine = setup({
             },
           },
         },
+        StartPrompt: {
+            entry: {type: "spst.speak", params: {utterance: "Let's test the ASR! Say a phrase and I will transcribe it and show you the confidence. Say no if you want to stop this test."}},
+            on: {SPEAK_COMPLETE: "TestASR"},
+        },
         TestASR: {
           initial: "Prompt",
           on: {
@@ -191,7 +195,7 @@ const dmMachine = setup({
             Prompt: {
               entry: { 
                 type: "spst.speak", 
-                params: { utterance: `Let's test the ASR! Say a phrase and I will transcribe it and show you the confidence. Say no if you want to stop this test.` } 
+                params: { utterance: `Say your phrase.` } 
               },
               on: { SPEAK_COMPLETE: "Ask" },
             },
