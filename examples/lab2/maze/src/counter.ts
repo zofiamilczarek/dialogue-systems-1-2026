@@ -2,14 +2,29 @@ import { assign, createActor, setup } from "xstate";
 
 export function setupController(element: HTMLButtonElement) {
   element.addEventListener("click", () => {
-    actor.send({ type: element.id });
+    actor.send({ type: element.id } as MazeEvents);
   });
 }
 
+type MazeEvents =
+  | { type: "START" }
+  | { type: "EXIT" }
+  | { type: "R" }
+  | { type: "L" }
+  | { type: "U" }
+  | { type: "D" };
+
 const machine = setup({
-  types: {},
-  actions: {},
-  guards: {},
+  types: {
+    context: {} as { doorA2B2: boolean },
+    events: {} as MazeEvents,
+  },
+  actions: {
+    openDoorA2B2: assign({ doorA2B2: true }),
+  },
+  guards: {
+    isDoorA2B2Open: ({ context }) => context.doorA2B2,
+  },
 }).createMachine({
   context: {
     doorA2B2: false,
@@ -32,7 +47,7 @@ const machine = setup({
             R: [
               {
                 target: "B2",
-                guard: ({ context }) => context.doorA2B2,
+                guard: "isDoorA2B2Open",
               },
               { actions: () => console.log("THE DOOR IS LOCKED") },
             ],
@@ -58,7 +73,7 @@ const machine = setup({
           on: {
             L: "A1",
             R: {
-              actions: assign({ doorA2B2: true }),
+              actions: { type: "openDoorA2B2" },
             },
           },
         },
