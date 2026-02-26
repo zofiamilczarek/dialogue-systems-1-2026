@@ -2,20 +2,28 @@ import { assign, createActor, setup } from "xstate";
 import type { Settings } from "speechstate";
 import { speechstate } from "speechstate";
 import { createBrowserInspector } from "@statelyai/inspect";
-import { KEY } from "./azure";
+import { KEY, NLU_KEY } from "./azure";
 import type { DMContext, DMEvents } from "./types";
 
 const inspector = createBrowserInspector();
 
 const azureCredentials = {
   endpoint:
-    "https://YOUR_REGION.api.cognitive.microsoft.com/sts/v1.0/issuetoken",
+    "https://francecentral.api.cognitive.microsoft.com/sts/v1.0/issuetoken",
   key: KEY,
 };
 
+const azureLanguageCredentials = {
+  endpoint: "" /** your Azure CLU prediction URL */,
+  key: NLU_KEY /** reference to your Azure CLU key */,
+  deploymentName: "" /** your Azure CLU deployment */,
+  projectName: "" /** your Azure CLU project name */,
+};
+
 const settings: Settings = {
+  azureLanguageCredentials: azureLanguageCredentials,
   azureCredentials: azureCredentials,
-  azureRegion: "YOUR_REGION",
+  azureRegion: "francecentral",
   asrDefaultCompleteTimeout: 0,
   asrDefaultNoInputTimeout: 5000,
   locale: "en-US",
@@ -69,6 +77,7 @@ const dmMachine = setup({
   context: ({ spawn }) => ({
     spstRef: spawn(speechstate, { input: settings }),
     lastResult: null,
+    interpretation: null,
   }),
   id: "DM",
   initial: "Prepare",
