@@ -1,3 +1,4 @@
+original performance: https://www.youtube.com/watch?v=8cACbzanitg
 <!--ID=B7267351-473F-409D-9765-754A8EBCDE05;Version=1|{"VoiceNameToIdMapItems":[{"Id":"c672661c-de72-4578-89cc-5d52ad876893","Name":"Microsoft Server Speech Text to Speech Voice (en-GB, AdaMultilingualNeural)","ShortName":"en-GB-AdaMultilingualNeural","Locale":"en-GB","VoiceType":"StandardVoice"},{"Id":"1ef900c5-21da-47d1-b5fa-781d43fac5de","Name":"en-GB-Ada:DragonHDLatestNeural","ShortName":"en-GB-Ada:DragonHDLatestNeural","Locale":"en-GB","VoiceType":"StandardVoice"}]}-->
 <!--ID=FCB40C2B-1F9F-4C26-B1A1-CF8E67BE07D1;Version=1|{"Files":{}}-->
 <!--ID=5B95B1CC-2C7B-494F-B746-CF22A0E779B7;Version=1|{"Locales":{"en-GB":{"AutoApplyCustomLexiconFiles":[{}]}}}-->
