@@ -18,9 +18,15 @@ export interface Entity { // This is the type of the entities array in the NLUOb
   length: number;
 }
 
+export interface Resolution {
+  resolutionKind: string;
+  value: boolean;
+}
+
 export interface Intent { // This is the type of the intents array in the NLUObject.
   category: string;
   confidenceScore: number;
+  resolutions?: Resolution[];
 }
 
 export interface NLUObject { // This is the type of the interpretation in the DMContext.
@@ -30,8 +36,8 @@ export interface NLUObject { // This is the type of the interpretation in the DM
   topIntent: string;
 }
 
-type AppointmentState = {
-  name?: string
-  day?: string
-  time?: string
+export type AppointmentState = {
+  name?: string;
+  day?: string;
+  time?: string;
 }
