@@ -1,4 +1,4 @@
-import { assign, createActor, setup } from "xstate";
+import { assign, createActor, setup, and, or } from "xstate";
 import type { Settings } from "speechstate";
 import { speechstate } from "speechstate";
 import { createBrowserInspector } from "@statelyai/inspect";
@@ -65,7 +65,7 @@ function getApptFromIntents(entities: Entity[]): AppointmentState {
       appt.day = entity.text;
     }
     else if (entity.category === "person") {
-      appt.day = entity.text;
+      appt.name = entity.text;
     }
     else if (entity.category === "time") {
       appt.time = entity.text;
@@ -121,10 +121,10 @@ const dmMachine = setup({
       })),
   },
   // TODO: figure out how to actually access the boolean value
-  // guards:{
-  //   // isYes: ({context}) => context.interpretation?.entities?.find(e => e.[0].resolutionKind === "BooleanResolution")?,
-  //   // isNo: ({context}) => ,
-  // },
+  guards:{
+    isYes: ({context}) => context.interpretation?.entities?.find(e => e.resolutions?.[0].resolutionKind === "BooleanResolution")?.resolutions?.[0].value ?? false,
+    isNo: ({context}) => !(context.interpretation?.entities?.find(e => e.resolutions?.[0].resolutionKind === "BooleanResolution")?.resolutions?.[0].value ?? true),
+  },
 }).createMachine({
   context: ({ spawn }) => ({
     spstRef: spawn(speechstate, { input: settings }),
@@ -252,7 +252,7 @@ const dmMachine = setup({
                 actions: assign(({}) => {
                     return { interpretation: null };
                   }),
-                target: "HandleNLU",
+                target: "#DM.Done",
               } 
           },
         },
@@ -263,12 +263,12 @@ const dmMachine = setup({
               // If the user says yes, we are done
               {
                 target: "#DM.Done",
-                // guard: "isYes",
+                guard: "isYes",
               },
               // If they say no we start again
               {
-                target: "ReStartPrompt",
-                // guard: "isNo",
+                target: "HandleNLU",
+                guard: "isNo",
               },
               // If no speech is picked up we go to NoInput
               { target: "#DM.NoInput" },
@@ -287,6 +287,7 @@ const dmMachine = setup({
                 RECOGNISED: {
                   actions: assign(({ event }) => ({
                     lastResult: event.value,
+                    interpretation: event.nluValue,
                   })),
                 },
                 ASR_NOINPUT: {
@@ -334,11 +335,57 @@ const dmMachine = setup({
             },
           },
         },
+        AskTime: {
+          initial: "Prompt",
+          on: {
+            LISTEN_COMPLETE: [
+              // go to ConfirmMeeting if either has been specified or the user said yes
+              {
+                target: "ConfirmMeeting",
+                guard: or(['isYes', ({context}) => !!context.appt.time]),
+              },
+              // {
+              //   target: ".ReAsk",
+              //   guard: ({ context }) => !!context.lastResult,
+              // },
+              { target: "#DM.NoInput" },
+            ],
+          },
+          states: {
+            Prompt: {
+              entry: { type: 
+                "spst.speak", 
+                params:  {utterance: "Would you like the meeting to last all day or do you want it at a specific time?"},
+              },
+              on: { SPEAK_COMPLETE: "Ask" },
+            },
+            Ask: {
+              entry: { type: "spst.listen" },
+              on: {
+                RECOGNISED: {
+                  actions: assign(({ context, event }) => {
+                    return { 
+                      lastResult: event.value, 
+                      interpretation: event.nluValue, 
+                      appt: {
+                        ...context.appt,
+                        ...getApptFromIntents(event.nluValue?.entities ?? [])
+                      } };
+                  })
+                },
+                ASR_NOINPUT: {
+                  actions: assign({ lastResult: null }),
+                  invoke: "#DM.NoInput"
+                },
+              },
+            },
+          },
+        },
         HandleMeeting: {
           entry: assign(({context}) => {
-              return { appt: getApptFromIntents(context.interpretation?.entities ?? []) };
+              return { appt: {...context.appt, ...getApptFromIntents(context.interpretation?.entities ?? [])} };
           }),
-          onDone: [
+          always: [
             // if day, name and time are there -> confirm to schedule appt
             {
               target: "ConfirmMeeting",
@@ -346,7 +393,7 @@ const dmMachine = setup({
             },
             // if time not there -> aks if the meeting is the whole day
             {
-              target: "ConfirmDayMeeting",
+              target: "AskTime",
               guard: ({context}) => !!context.appt.day && !!context.appt.name,
             },
             // if day/name not there -> say "you did not specify {day|name}, please specify the name"
@@ -354,6 +401,9 @@ const dmMachine = setup({
               target: "AskMissing",
               guard: ({context}) => !context.appt.day || !context.appt.name,
             },
+            {
+              target: "HandleNLU",
+            }
           ],
           // if none are there -> ask to provide info. extract names from
         },

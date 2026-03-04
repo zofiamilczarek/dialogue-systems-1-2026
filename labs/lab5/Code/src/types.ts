@@ -16,6 +16,7 @@ export interface Entity { // This is the type of the entities array in the NLUOb
   confidenceScore: number;
   offset: number;
   length: number;
+  resolutions?: Resolution[];
 }
 
 export interface Resolution {
@@ -26,7 +27,6 @@ export interface Resolution {
 export interface Intent { // This is the type of the intents array in the NLUObject.
   category: string;
   confidenceScore: number;
-  resolutions?: Resolution[];
 }
 
 export interface NLUObject { // This is the type of the interpretation in the DMContext.
