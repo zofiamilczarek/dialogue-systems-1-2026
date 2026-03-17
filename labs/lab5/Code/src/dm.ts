@@ -94,7 +94,11 @@ const dmMachine = setup({
   },
   // TODO: figure out how to actually access the boolean value
   guards:{
-    isYes: ({context}) => context.interpretation?.entities?.find(e => e.resolutions?.[0].resolutionKind === "BooleanResolution")?.resolutions?.[0].value ?? false,
+    isYes: ({context}) => {
+      let isTrueResolution: boolean = context.interpretation?.entities?.find(e => e.resolutions?.[0].resolutionKind === "BooleanResolution")?.resolutions?.[0].value ?? false;
+      let isListkeyYes: boolean = context.interpretation?.entities?.find(e => e.extraInformation?.[0].key === "yes")?.extraInformation?.[0].key === "yes";
+      return isTrueResolution || isListkeyYes;
+    },
     isNo: ({context}) => !(context.interpretation?.entities?.find(e => e.resolutions?.[0].resolutionKind === "BooleanResolution")?.resolutions?.[0].value ?? true),
   },
 }).createMachine({
@@ -210,7 +214,6 @@ const dmMachine = setup({
             },
           },          
         },
-        // instead of asking for day, name and time separately -> ask once and only re-ask if necessary.
         CheckCelebrity: {
           entry: {
             type: "spst.speak",
@@ -249,7 +252,7 @@ const dmMachine = setup({
           states: {
             Prompt: {
               entry: { type: "spst.speak", params: ({context}) => ({
-              utterance: `Do you want me to create am appointment with ${context.appt.name} on ${context.appt.day} at ${context.appt.time}?`
+              utterance: !!context.appt.time ? `Do you want me to create am appointment with ${context.appt.name} on ${context.appt.day} at ${context.appt.time}?` : `Do you want me to create am appointment with ${context.appt.name} on ${context.appt.day}`
             })},
               on: { SPEAK_COMPLETE: "Ask" },
             },
@@ -327,7 +330,7 @@ const dmMachine = setup({
             Prompt: {
               entry: { type: 
                 "spst.speak", 
-                params:  {utterance: "Would you like the meeting to last all day or do you want it at a specific time?"},
+                params:  {utterance: "Would you like the meeting to last all day?"},
               },
               on: { SPEAK_COMPLETE: "Ask" },
             },
@@ -382,7 +385,7 @@ const dmMachine = setup({
       },   
     }, 
     Done: {
-      entry: [{type: "spst.speak", params: {utterance: "Meeting created. Goodbye!"}}],
+      entry: [{type: "spst.speak", params: {utterance: "Thank you for using our app!"}}],
       on: {
         CLICK: "Dialogue.Greeting",
       },

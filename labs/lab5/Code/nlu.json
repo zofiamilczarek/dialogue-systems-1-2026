@@ -1,0 +1,474 @@
+{
+    "projectFileVersion": "2025-05-15-preview",
+    "stringIndexType": "Utf16CodeUnit",
+    "metadata": {
+        "projectKind": "Conversation",
+        "settings": {
+            "confidenceThreshold": 0,
+            "normalizeCasing": false,
+            "augmentDiacritics": false
+        },
+        "projectName": "lab5",
+        "multilingual": false,
+        "description": "NLU for lab5",
+        "language": "en-us"
+    },
+    "assets": {
+        "projectKind": "Conversation",
+        "intents": [
+            {
+                "category": "None",
+                "description": "Used when the user's input doesn't match any known intent or is out of scope."
+            },
+            {
+                "category": "CreateMeeting"
+            },
+            {
+                "category": "WhoIsX"
+            }
+        ],
+        "entities": [
+            {
+                "category": "celebrity",
+                "compositionSetting": "combineComponents"
+            },
+            {
+                "category": "person",
+                "compositionSetting": "combineComponents"
+            },
+            {
+                "category": "date",
+                "compositionSetting": "combineComponents",
+                "prebuilts": [
+                    {
+                        "category": "DateTime"
+                    }
+                ]
+            },
+            {
+                "category": "time",
+                "compositionSetting": "combineComponents"
+            },
+            {
+                "category": "yesno",
+                "compositionSetting": "combineComponents",
+                "list": {
+                    "sublists": [
+                        {
+                            "listKey": "no",
+                            "synonyms": [
+                                {
+                                    "language": "en-us",
+                                    "values": [
+                                        "no",
+                                        "nope",
+                                        "that's worng",
+                                        "not sure"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "listKey": "yes",
+                            "synonyms": [
+                                {
+                                    "language": "en-us",
+                                    "values": [
+                                        "yes",
+                                        "yeah",
+                                        "sure",
+                                        "why not",
+                                        "okay"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "prebuilts": [
+                    {
+                        "category": "Choice.Boolean"
+                    }
+                ]
+            }
+        ],
+        "utterances": [
+            {
+                "text": "I don't understand.",
+                "language": "en-us",
+                "intent": "None",
+                "entities": [],
+                "dataset": "Train"
+            },
+            {
+                "text": "I don't know how to build a castle.",
+                "language": "en-us",
+                "intent": "None",
+                "entities": [],
+                "dataset": "Train"
+            },
+            {
+                "text": "No.",
+                "language": "en-us",
+                "intent": "None",
+                "entities": [
+                    {
+                        "category": "yesno",
+                        "offset": 0,
+                        "length": 2
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "Yes.",
+                "language": "en-us",
+                "intent": "None",
+                "entities": [
+                    {
+                        "category": "yesno",
+                        "offset": 0,
+                        "length": 3
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "What can you help me with?",
+                "language": "en-us",
+                "intent": "None",
+                "entities": [],
+                "dataset": "Train"
+            },
+            {
+                "text": "Can you write me a poem?",
+                "language": "en-us",
+                "intent": "None",
+                "entities": [],
+                "dataset": "Train"
+            },
+            {
+                "text": "I don't know.",
+                "language": "en-us",
+                "intent": "None",
+                "entities": [],
+                "dataset": "Train"
+            },
+            {
+                "text": "I am meeting Tom Saturday at 5pm.",
+                "language": "en-us",
+                "intent": "CreateMeeting",
+                "entities": [
+                    {
+                        "category": "person",
+                        "offset": 13,
+                        "length": 3
+                    },
+                    {
+                        "category": "date",
+                        "offset": 17,
+                        "length": 8
+                    },
+                    {
+                        "category": "time",
+                        "offset": 29,
+                        "length": 3
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "I am meeting Tom tomorrow evening.",
+                "language": "en-us",
+                "intent": "CreateMeeting",
+                "entities": [
+                    {
+                        "category": "person",
+                        "offset": 13,
+                        "length": 3
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "Can you schedule a meeting with Vlad?",
+                "language": "en-us",
+                "intent": "CreateMeeting",
+                "entities": [
+                    {
+                        "category": "person",
+                        "offset": 32,
+                        "length": 4
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "I need you to create a meeting with me and Vlad for this Friday.",
+                "language": "en-us",
+                "intent": "CreateMeeting",
+                "entities": [
+                    {
+                        "category": "person",
+                        "offset": 43,
+                        "length": 4
+                    },
+                    {
+                        "category": "date",
+                        "offset": 57,
+                        "length": 6
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "Hey I wanna set up a meeting with Bora at 11am, can you do that?",
+                "language": "en-us",
+                "intent": "CreateMeeting",
+                "entities": [
+                    {
+                        "category": "person",
+                        "offset": 34,
+                        "length": 4
+                    },
+                    {
+                        "category": "time",
+                        "offset": 42,
+                        "length": 4
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "Can you set up a meeting with me and Tom for Monday 9AM?",
+                "language": "en-us",
+                "intent": "CreateMeeting",
+                "entities": [
+                    {
+                        "category": "person",
+                        "offset": 37,
+                        "length": 3
+                    },
+                    {
+                        "category": "date",
+                        "offset": 45,
+                        "length": 6
+                    },
+                    {
+                        "category": "time",
+                        "offset": 52,
+                        "length": 3
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "I think 10am is a good time.",
+                "language": "en-us",
+                "intent": "CreateMeeting",
+                "entities": [
+                    {
+                        "category": "time",
+                        "offset": 8,
+                        "length": 4
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "I am going to meet Vlad on Tuesday at 5pm.",
+                "language": "en-us",
+                "intent": "CreateMeeting",
+                "entities": [
+                    {
+                        "category": "person",
+                        "offset": 19,
+                        "length": 4
+                    },
+                    {
+                        "category": "date",
+                        "offset": 27,
+                        "length": 7
+                    },
+                    {
+                        "category": "time",
+                        "offset": 38,
+                        "length": 3
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "Can you shedule a meeting with Bora this Thursday?",
+                "language": "en-us",
+                "intent": "CreateMeeting",
+                "entities": [
+                    {
+                        "category": "person",
+                        "offset": 31,
+                        "length": 4
+                    },
+                    {
+                        "category": "date",
+                        "offset": 41,
+                        "length": 8
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "I'd like to schedule a meeting with Bora on Sunday at 10.",
+                "language": "en-us",
+                "intent": "CreateMeeting",
+                "entities": [
+                    {
+                        "category": "person",
+                        "offset": 36,
+                        "length": 4
+                    },
+                    {
+                        "category": "date",
+                        "offset": 44,
+                        "length": 6
+                    },
+                    {
+                        "category": "time",
+                        "offset": 54,
+                        "length": 2
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "Can you tell me something about Taylor Swift?",
+                "language": "en-us",
+                "intent": "WhoIsX",
+                "entities": [
+                    {
+                        "category": "celebrity",
+                        "offset": 32,
+                        "length": 12
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "Who is Leonardo DiCaprio?",
+                "language": "en-us",
+                "intent": "WhoIsX",
+                "entities": [
+                    {
+                        "category": "celebrity",
+                        "offset": 7,
+                        "length": 17
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "Who is Ed Sheeran?",
+                "language": "en-us",
+                "intent": "WhoIsX",
+                "entities": [
+                    {
+                        "category": "celebrity",
+                        "offset": 7,
+                        "length": 10
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "Can you tell me why is Leonardo DiCaprio famous?",
+                "language": "en-us",
+                "intent": "WhoIsX",
+                "entities": [
+                    {
+                        "category": "celebrity",
+                        "offset": 23,
+                        "length": 17
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "What does Ed Sheeran do?",
+                "language": "en-us",
+                "intent": "WhoIsX",
+                "entities": [
+                    {
+                        "category": "celebrity",
+                        "offset": 10,
+                        "length": 10
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "Could tell me something about Ed Sheeran?",
+                "language": "en-us",
+                "intent": "WhoIsX",
+                "entities": [
+                    {
+                        "category": "celebrity",
+                        "offset": 30,
+                        "length": 10
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "What is Taylor Swift known for?",
+                "language": "en-us",
+                "intent": "WhoIsX",
+                "entities": [
+                    {
+                        "category": "celebrity",
+                        "offset": 8,
+                        "length": 12
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "What is DiCaprio known for?",
+                "language": "en-us",
+                "intent": "WhoIsX",
+                "entities": [
+                    {
+                        "category": "celebrity",
+                        "offset": 8,
+                        "length": 8
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "Can you tell me about Ed Sheeran?",
+                "language": "en-us",
+                "intent": "WhoIsX",
+                "entities": [
+                    {
+                        "category": "celebrity",
+                        "offset": 22,
+                        "length": 10
+                    }
+                ],
+                "dataset": "Train"
+            },
+            {
+                "text": "Who is Taylor Swift?",
+                "language": "en-us",
+                "intent": "WhoIsX",
+                "entities": [
+                    {
+                        "category": "celebrity",
+                        "offset": 7,
+                        "length": 12
+                    }
+                ],
+                "dataset": "Train"
+            }
+        ]
+    }
+}
